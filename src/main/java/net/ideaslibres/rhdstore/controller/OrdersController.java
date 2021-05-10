@@ -1,5 +1,6 @@
 package net.ideaslibres.rhdstore.controller;
 
+import net.ideaslibres.rhdstore.exception.RecordNotFoundException;
 import net.ideaslibres.rhdstore.model.Constants;
 import net.ideaslibres.rhdstore.model.dto.OrderDto;
 import net.ideaslibres.rhdstore.service.OrdersService;
@@ -37,6 +38,7 @@ public class OrdersController {
     @RolesAllowed(ROLE_CLIENT)
     @PostMapping
     public ResponseEntity<OrderDto> placeOrder(@Valid @RequestBody OrderDto order, Principal principal) throws IllegalAccessException {
+        logger.info("new order from user {}", principal.getName());
         return ResponseEntity
                 .ok(ordersService.placeOrder(order, principal));
     }
@@ -55,8 +57,8 @@ public class OrdersController {
             @RequestParam(required = false) @DateTimeFormat(pattern = Constants.DATE_TIME_FORMAT) Date startDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = Constants.DATE_TIME_FORMAT) Date endDate,
             @RequestParam(required = false, defaultValue = "desc(creationTimestamp)")
-                List<@Pattern(regexp = "(desc|asc)\\([a-zA-Z]+\\)+") String> orderBy,
-            @RequestParam(required = false, defaultValue = "8") Integer pageSize,
+                List<@Pattern(regexp = "(desc|asc)\\([a-zA-Z]+\\)") String> orderBy,
+            @RequestParam(required = false, defaultValue = "5") Integer pageSize,
             @RequestParam(required = false, defaultValue = "0") Integer pageNumber
     ) throws IllegalAccessException {
         return ResponseEntity
@@ -68,12 +70,21 @@ public class OrdersController {
     public ResponseEntity<Page<OrderDto>> getOrdersByUsername(
             @PathVariable String username,
             @RequestParam(required = false, defaultValue = "desc(creationTimestamp)")
-                List<@Pattern(regexp = "(desc|asc)\\([a-zA-Z]+\\)+") String> orderBy,
-            @RequestParam(required = false, defaultValue = "8") Integer pageSize,
+                List<@Pattern(regexp = "(desc|asc)\\([a-zA-Z]+\\)") String> orderBy,
+            @RequestParam(required = false, defaultValue = "5") Integer pageSize,
             @RequestParam(required = false, defaultValue = "0") Integer pageNumber,
             Principal principal
     ) throws IllegalAccessException {
         return ResponseEntity
                 .ok(ordersService.getOrdersByUsername(username, orderBy, pageSize, pageNumber, principal));
+    }
+
+    @RolesAllowed(ROLE_ADMIN)
+    @GetMapping("/{ordercode}")
+    public ResponseEntity<OrderDto> getOrdersByUsername(
+            @PathVariable String ordercode
+    ) throws RecordNotFoundException {
+        return ResponseEntity
+                .ok(ordersService.getOrderByCode(ordercode));
     }
 }

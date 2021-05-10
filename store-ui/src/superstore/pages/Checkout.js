@@ -6,7 +6,7 @@ import {Box, Button, DataTable} from 'grommet'
 import {Basket} from 'grommet-icons'
 import ProfileModel from '../model/ProfileModel'
 import OrdersClient from '../clients/OrdersClient'
-import {useHistory} from "react-router";
+import {useHistory} from 'react-router'
 
 function Checkout() {
     const history = useHistory()
@@ -22,7 +22,7 @@ function Checkout() {
         newData.push({'name': 'Shipping', 'price': .01, 'quantity': 1})
         newData.push({'name': 'Total', 'price': cartModel.getTotal() + .01, 'quantity': 1})
         setData(newData)
-    }, [cartModel.items])
+    }, [cartModel])
 
     const columns = [
         {
@@ -62,8 +62,11 @@ function Checkout() {
         ordersClient.createOrder(() => {
             history.push('/profile')
             cartModel.removeAllItems()
-        }, () => {
-
+        }, (error) => {
+            if(error.details[0] === "uilogout") {
+                profileModel.logout()
+                history.push('/login?logoutreason=tokenexpired')
+            }
         }, order)
     };
 

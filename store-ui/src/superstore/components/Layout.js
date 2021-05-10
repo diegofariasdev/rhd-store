@@ -1,4 +1,4 @@
-import {Box, Grommet} from 'grommet'
+import {Box, Grommet, Text} from 'grommet'
 import AppBar from './AppBar'
 
 function Layout (props) {
@@ -19,8 +19,20 @@ function Layout (props) {
         <Grommet theme={theme} full>
             <Box fill>
                 <AppBar {...props}/>
-                <Box flex direction='row' pad='medium' overflow={{ horizontal: 'hidden'}}>
+                <Box
+                    flex
+                    overflow='auto'
+                    direction='column'
+                    pad='medium'>
                     {props.children}
+                </Box>
+                <Box
+                    direction='row'
+                    background="brand"
+                    pad="medium"
+                    justify='between'
+                >
+                    <Text>RHD Application Test by Diego Farías</Text>
                 </Box>
             </Box>
         </Grommet>

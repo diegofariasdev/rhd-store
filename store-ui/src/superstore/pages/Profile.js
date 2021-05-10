@@ -1,8 +1,7 @@
 import {Redirect, useHistory} from 'react-router'
-import React, {useEffect, useState} from 'react'
-import {Box, Button, DataTable, Heading} from "grommet";
+import React, {useEffect, useMemo, useState} from 'react'
+import {Box, Button, DataTable, Heading} from 'grommet'
 import Layout from '../components/Layout'
-import CartModel from '../model/CartModel'
 import ProfileModel from '../model/ProfileModel'
 import OrdersClient from '../clients/OrdersClient'
 
@@ -11,8 +10,9 @@ function Profile() {
     const [loading, setLoading] = useState(true)
     const [userLogged, setUserLogged] = useState(false)
     const [data, setData] = useState([])
-    const orderClient = new OrdersClient()
-    const cartModel = CartModel
+    const orderClient = useMemo(() => {
+        return new OrdersClient()
+    }, [])
     const profileModel = ProfileModel
 
     const columns = [
@@ -43,22 +43,35 @@ function Profile() {
         {
             property: 'total',
             header: 'Total'
+        },
+        {
+            property: 'status',
+            header: 'Status',
+            render: datum => {
+                const lastStatus = datum.orderLog[datum.orderLog.length - 1].status
+                return lastStatus
+            }
         }
     ]
 
     useEffect(() => {
-        if (profileModel.isLogged()) {
+        if (profileModel.isLoggedIn()) {
             setUserLogged(true)
-            orderClient.fetchOrders((data) => {
-                setData(data.content)
-            }, () => {
-
-            }, profileModel.getUsername())
+            if(!profileModel.isAdmin()) {
+                orderClient.fetchOrdersByUsername((data) => {
+                    setData(data.content)
+                }, (error) => {
+                    if(error.details[0] === "uilogout") {
+                        profileModel.logout()
+                        history.push('/login?logoutreason=tokenexpired')
+                    }
+                }, profileModel.getUsername())
+            }
         } else {
             setUserLogged(false)
         }
         setLoading(false)
-    }, [])
+    }, [history, orderClient, profileModel])
 
     const logout = () => {
         profileModel.logout()

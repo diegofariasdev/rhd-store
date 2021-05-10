@@ -6,14 +6,14 @@ class ProfileModel {
                 this.token = {}
                 this.claims = {}
             } else {
-                this.loadToken(this.token)
+                this.loadToken()
             }
             ProfileModel.instance = this
         }
         return ProfileModel.instance
     }
 
-    loadToken(token) {
+    loadToken() {
         const tokenBody = atob(this.token.access_token.split(".")[1])
         const claims = JSON.parse(tokenBody)
         if (this.claims == null) {
@@ -25,22 +25,28 @@ class ProfileModel {
     }
 
     setToken(token) {
-        this.token.access_token = token.access_token
         localStorage.setItem("currentToken", JSON.stringify(token))
-        this.loadToken(token)
+        this.token.access_token = token.access_token
+        this.loadToken()
     }
 
     logout() {
         this.claims.exp = null
         this.claims.sub = null
+        this.claims.roles = null
         this.token.access_token = null
         localStorage.removeItem("currentToken")
     }
 
-    isLogged() {
-        const hasAccessToken = this.token.access_token !== null
-        const notExpiredToken = this.claims.exp <= Date.now()
-        return hasAccessToken && notExpiredToken
+    isLoggedIn() {
+        const hasAccessToken = typeof(this.token.access_token) != 'undefined' && this.token.access_token != null
+        const expiredToken = typeof(this.claims.exp) == 'undefined' ||
+            this.claims.exp == null ||
+            (this.claims.exp <= Math.round(new Date() / 1000))
+        if (expiredToken) {
+            this.logout()
+        }
+        return hasAccessToken && !expiredToken
     }
 
     getUsername() {
@@ -48,7 +54,9 @@ class ProfileModel {
     }
 
     isAdmin() {
-        return this.claims.roles == null ? false : this.claims.roles == 'admin'
+        return (typeof(this.claims.roles) == 'undefined' || this.claims.roles == null)
+            ? false
+            : this.claims.roles === 'admin'
     }
 }
 

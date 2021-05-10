@@ -51,6 +51,10 @@ public class UserDto implements UserDetails {
         this.userId = userId;
     }
 
+    public UserDto(String username) {
+        this.username = username;
+    }
+
     public UserDto(String username, String profile, Boolean enabled, Date creationTimestamp, Date updateTimestamp) {
         this.username = username;
         this.profile = profile;

@@ -1,7 +1,6 @@
 import React, {useState} from 'react'
 import {Box, Button, Form, FormField, Heading, TextInput} from 'grommet'
 import Layout from '../components/Layout'
-import CartModel from '../model/CartModel'
 import ProfileModel from '../model/ProfileModel'
 import {useHistory, useLocation} from 'react-router'
 import UsersClient from '../clients/UsersClient'
@@ -25,10 +24,10 @@ function Login() {
 
         userClient.login((token) => {
             profileModel.setToken(token)
-            if(query.get("from") === "cart")
-                history.push('/cart')
-            else
-                history.push('/')
+            if(query.get("from") === "cart") history.push('/cart')
+            else profileModel.isAdmin()
+                ? history.push('/adminorders')
+                : history.push('/')
         }, (error) => {
             if(error.details[0] === "Username not found") {
                 setUsernameError("Username not found")
@@ -44,9 +43,9 @@ function Login() {
     }
 
     const signup = ({value}) => {
-        userClient.signUp((token) => {
+        userClient.signUp(() => {
                 login({value})
-            }, (error) => {
+            }, () => {
                 setUsernameSignUpError("Unexpected error while creating user")
             }, value.username
             , value.password)
@@ -71,35 +70,40 @@ function Login() {
                         <Button primary type="submit" label="Login" />
                     </Box>
                 </Form>
-
+            </Box>
+            <Box
+                fill='horizontal'
+                pad={{"horizontal": "10em"}}
+                margin={{"top": "18em", "bottom": "22em"}}
+            >
                 <Heading level={3}>... Or sign up if you're new</Heading>
                 <Form
                     onSubmit={signup}
                 >
                     <FormField
-                        name="username-su"
+                        name="username"
                         htmlFor="username-su-id"
                         label="Username"
-                        validate={(value) => {
-                            if(value == "") return "Username is missing"
+                        validate={(field, form) => {
+                            if(typeof (form.username) == 'undefined' || form.username === "") return "Username is missing"
                         }}
                         error={usernameSignUpError}>
-                        <TextInput id="username-su-id" name="username-su" />
+                        <TextInput id="username-su-id" name="username" />
                     </FormField>
                     <FormField
-                        name="password-su"
+                        name="password"
                         htmlFor="password-su-id"
                         label="Password">
-                        <TextInput id="password-su-id" name="password-su" type="password"/>
+                        <TextInput id="password-su-id" name="password" type="password"/>
                     </FormField>
                     <FormField
-                        name="password-su-conf"
+                        name="passwordConf"
                         htmlFor="password-su-conf-id"
                         label="Confirm Password"
                         validate={(field, form) => {
-                            if(field !== form.password) return "Password and Confirm Password mismatch"
+                            if(form.passwordConf !== form.password) return "Password and Confirm Password mismatch"
                         }}>
-                        <TextInput id="password-su-conf-id" name="password-su-conf" type="password"/>
+                        <TextInput id="password-su-conf-id" name="passwordConf" type="password"/>
                     </FormField>
                     <Box pad={{'horizontal': 'large'}}>
                         <Button type="submit" label="Sign Up" />

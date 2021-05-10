@@ -44,11 +44,12 @@ public class ItemDto {
 
     public ItemDto(){}
 
-    public ItemDto(String code, String name, String category, Float price) {
+    public ItemDto(String code, String name, String category, Float price, byte[] picture) {
         this.code = code;
         this.name = name;
         this.category = category;
         this.price = price;
+        this.picture = picture;
     }
 
     public ItemDto(String name, String description, String category, Float price, String pictureUrl){

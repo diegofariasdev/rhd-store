@@ -13,7 +13,7 @@ function AppBar (props) {
 
     const userSettingsUrl='#/adminusers'
     const orderSettingsUrl='#/adminorders'
-    const itemSettingsUrl='#/adminsettings'
+    const itemSettingsUrl='#/adminitems'
 
     return (
         <Box
@@ -66,7 +66,7 @@ function AppBar (props) {
                 </Tip>
                 </>}
                 <Button
-                    icon={<User color={profileModel.isLogged() ? 'accent-1' : ''}/>}
+                    icon={<User color={profileModel.isLoggedIn() ? 'accent-1' : ''}/>}
                     href={profileUrl} />
             </Box>
         </Box>

@@ -1,9 +1,12 @@
 package net.ideaslibres.rhdstore.service;
 
+import net.ideaslibres.rhdstore.exception.RecordNotFoundException;
 import net.ideaslibres.rhdstore.model.Constants;
 import net.ideaslibres.rhdstore.model.dto.*;
 import net.ideaslibres.rhdstore.model.repository.*;
 import net.ideaslibres.rhdstore.util.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -25,6 +28,8 @@ import static org.aspectj.util.LangUtil.isEmpty;
 @Service
 public class OrdersService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrdersService.class);
+
     private OrdersRepository ordersRepository;
     private OrderItemRepository orderItemRepository;
     private OrderLogRepository orderLogRepository;
@@ -43,8 +48,10 @@ public class OrdersService {
     public OrderDto placeOrder(OrderDto order, Principal principal) throws IllegalAccessException {
 
         order.user = getUserIdFromUsername(principal.getName());
+        calculateOrderCode(order, principal);
         completeOrderItemsAndCalculateTotal(order.orderItems, order);
-        calculateOrderCode(order);
+
+        logger.info("order code {} generated for order from user {}", order.code, principal.getName());
 
         OrderDto savedOrder = ordersRepository.save(order);
 
@@ -123,27 +130,12 @@ public class OrdersService {
             endDate.setTime(endDate.getTime() + (24 * 60 * 60 * 1000));
             orderPage = ordersRepository
                     .findAllByCreationTimestampBetween(startDate, endDate, pageRequest);
-        }else {
+        } else {
             orderPage = ordersRepository.findAll(pageRequest);
         }
 
         orderPage.stream().forEach((order) -> {
-            order.orderId = null;
-            order.user = null;
-            order.orderItems.stream().forEach((orderItem) -> {
-                orderItem.order = null;
-                orderItem.id = null;
-                orderItem.item = new ItemDto(
-                        orderItem.item.code,
-                        orderItem.item.name,
-                        orderItem.item.category,
-                        orderItem.item.price
-                );
-            });
-            order.orderLog.stream().forEach((orderLog) -> {
-                orderLog.order = null;
-                orderLog.orderLogEntryId = null;
-            });
+            cleanOrder(order);
         });
 
         return orderPage;
@@ -157,7 +149,15 @@ public class OrdersService {
         return getOrders(username, null, null, orderBy, pageSize, pageNumber);
     }
 
-    private void calculateOrderCode(OrderDto order) {
+    public OrderDto getOrderByCode(String code) throws RecordNotFoundException {
+        OrderDto order = ordersRepository.findByCode(code)
+                .orElseThrow(() -> new RecordNotFoundException("Order doesn't exist"));
+        cleanOrder(order);
+
+        return order;
+    }
+
+    public void calculateOrderCode(OrderDto order, Principal principal) {
         order.code = DigestUtils.md5DigestAsHex((order.user.userId + new Date().toString()).getBytes(StandardCharsets.UTF_8));
     }
 
@@ -166,7 +166,7 @@ public class OrdersService {
         Iterable<ItemDto> items = itemsRepository.findAllByCodeIn(codes);
 
         AtomicInteger totalItems = new AtomicInteger();
-        order.total = new Float(0);
+        order.total = 0.0f;
 
         items.forEach((item) -> {
             OrderItemDto orderItem = order.orderItems.stream()
@@ -193,4 +193,25 @@ public class OrdersService {
 
         return new UserDto(user.userId);
     }
+
+    private void cleanOrder(OrderDto order) {
+        order.orderId = null;
+        order.user = new UserDto(order.user.username);
+        order.orderItems.stream().forEach((orderItem) -> {
+            orderItem.order = null;
+            orderItem.id = null;
+            orderItem.item = new ItemDto(
+                    orderItem.item.code,
+                    orderItem.item.name,
+                    orderItem.item.category,
+                    orderItem.item.price,
+                    orderItem.item.picture
+            );
+        });
+        order.orderLog.stream().forEach((orderLog) -> {
+            orderLog.order = null;
+            orderLog.orderLogEntryId = null;
+        });
+    }
+
 }

@@ -1,6 +1,7 @@
 package net.ideaslibres.rhdstore.service;
 
 import net.ideaslibres.rhdstore.configuration.JwtTokenUtil;
+import net.ideaslibres.rhdstore.exception.RecordNotFoundException;
 import net.ideaslibres.rhdstore.model.dto.AccessTokenDto;
 import net.ideaslibres.rhdstore.model.dto.ItemDto;
 import net.ideaslibres.rhdstore.model.dto.OrderDto;
@@ -107,17 +108,50 @@ public class UsersService {
         return userPage;
     }
 
+    public Iterable<UserDto> getUsers(String profile, Boolean enable, List<String> orderBy) {
+        Sort sort = SystemUtils.parseOrderBy(orderBy);
+
+        Iterable<UserDto> users = null;
+
+        if (!isEmpty(profile) && enable != null) {
+            users = usersRepository.findAllByProfileAndEnabled(profile, enable, sort);
+        } else if (!isEmpty(profile) && enable == null) {
+            users = usersRepository.findAllByProfile(profile, sort);
+        } else if (isEmpty(profile) && enable != null) {
+            users = usersRepository.findAllByEnabled(enable, sort);
+        }else {
+            users = usersRepository.findAll(sort);
+        }
+
+        users.forEach((user) -> {
+            user.userId = null;
+            user.password = null;
+        });
+
+        return users;
+    }
+
     public UserDto updateUser(UserDto user) {
         UserDto dbUser = usersRepository.findByUsername(user.username)
                 .orElseThrow(() -> new IllegalArgumentException("user doesn't exist"));
 
         dbUser.profile = user.profile;
         dbUser.enabled = user.enabled;
+        if (dbUser.enabled) dbUser.loginAttempts = 0;
         dbUser.updateTimestamp = new Date();
-        if(!isEmpty(user.password)) dbUser.password = user.password;
+        if(!isEmpty(user.password)) dbUser.password = user.password.toUpperCase();
 
         usersRepository.save(dbUser);
 
         return new UserDto(dbUser.username, dbUser.profile, dbUser.enabled, dbUser.creationTimestamp, dbUser.updateTimestamp);
+    }
+
+    public UserDto getUserByUsername(String username) throws RecordNotFoundException {
+        UserDto user = usersRepository.findByUsername(username)
+                .orElseThrow(() -> new RecordNotFoundException(String.format("User %s not found", username)));
+
+        user.userId = null;
+        user.password = null;
+        return user;
     }
 }

@@ -1,5 +1,6 @@
 package net.ideaslibres.rhdstore.configuration;
 
+import net.ideaslibres.rhdstore.exception.RecordNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -55,25 +56,22 @@ public class GlobalExceptionHandler {
                 .body(new ApiCallError<>("Method argument type mismatch", Arrays.asList(details)));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiCallError<Map<String, String>>> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException ex) {
-        logger.error("handleMethodArgumentNotValidException {}\n", request.getRequestURI(), ex);
-
-        List<Map<String, String>> details = new ArrayList<>();
-        ex.getBindingResult()
-                .getFieldErrors()
-                .forEach(fieldError -> {
-                    Map<String, String> detail = new HashMap<>();
-                    detail.put("objectName", fieldError.getObjectName());
-                    detail.put("field", fieldError.getField());
-                    detail.put("rejectedValue", "" + fieldError.getRejectedValue());
-                    detail.put("errorMessage", fieldError.getDefaultMessage());
-                    details.add(detail);
-                });
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiCallError<String>> handleIllegalArgumentException(HttpServletRequest request, IllegalArgumentException ex) {
+        logger.error("handleIllegalArgumentException {}\n", request.getRequestURI(), ex);
 
         return ResponseEntity
                 .badRequest()
-                .body(new ApiCallError<>("Method argument validation failed", details));
+                .body(new ApiCallError<>("Invalid Data", Arrays.asList(ex.getMessage())));
+    }
+
+    @ExceptionHandler(RecordNotFoundException.class)
+    public ResponseEntity<ApiCallError<String>> handleRecordNotFoundException(HttpServletRequest request, RecordNotFoundException ex) {
+        logger.error("handleRecordNotFoundException {}\n", request.getRequestURI(), ex);
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ApiCallError<>("Record not found", Arrays.asList(ex.getMessage())));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -83,15 +81,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(new ApiCallError<>("Access denied!", Arrays.asList(ex.getMessage())));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiCallError<String>> handleIllegalArgumentException(HttpServletRequest request, Exception ex) {
-        logger.error("handleIllegalArgumentException {}\n", request.getRequestURI(), ex);
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(new ApiCallError<>("Invalid Data", Arrays.asList(ex.getMessage())));
     }
 
     @ExceptionHandler(BadCredentialsException.class)

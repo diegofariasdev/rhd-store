@@ -1,6 +1,9 @@
 package net.ideaslibres.rhdstore.model;
 
 public class Constants {
+
+    private Constants(){}
+
     public static final String ROLE_ADMIN = "admin";
     public static final String ROLE_CLIENT = "client";
 
@@ -22,7 +25,5 @@ public class Constants {
     public static final String ORDER_DELIVERED = "delivered";
     public static final String ORDER_COMPLETED = "completed";
 
-    public static final String[] ITEMS_ORDERABLE_COLUMNS =
-            new String[]{"price", "name", "category", "creationTimestamp"};
     public static final String DATE_TIME_FORMAT = "yyyy/MM/dd";
 }

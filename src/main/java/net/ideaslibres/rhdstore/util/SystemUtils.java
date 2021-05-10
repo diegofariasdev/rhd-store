@@ -7,6 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class SystemUtils {
+
+    private SystemUtils(){}
+
     public static String generateCode(String s) {
         return DigestUtils.md5DigestAsHex((s).getBytes(StandardCharsets.UTF_8));
     }
