@@ -1,6 +1,6 @@
 ## SuperStore ##
 
-Superstore is an e-store I developed to apply to RHD 
+Superstore is an e-store I developed to apply to a company 
 as FullStack Engineer.
 
 It is a Spring Boot application based on REST Services, 
@@ -82,8 +82,57 @@ anyway I'd prefer to store it in an httpOnly cookie.
   API client, instead of DB IDs, every object, either it is an item,
   or an order, has a code that identifies it.
 
+### Running project ###
+
+#### Cloud ####
+
+The store is deployed to GCP: https://rhd-store.uc.r.appspot.com/#/
+
+#### Run locally ####
+
+These instructions work for a Bash CLI and were tested using the
+following software:
+
+* java 1.8.0_271
+* maven 3.6.3
+* nodeJs v10.24.0
+* npm 6.14.11 
+* MySQL 5.7
+
+1. Create a schema in a MySQL 5.7 server and execute the scripts in 
+_database_ folder in ascendant order
+
+2. Execute the following command in the root folder of the project
+
+```bash
+SPRING_PROFILES_ACTIVE=local\
+mvn spring-boot:run\
+-Ddatabase.connectionUrl=jdbc:mysql://localhost:3306/store\
+-Ddatabase.username=root\
+-Ddatabase.password=root
+```
+
+The application includes a compiled version of the frontend and is
+available on: http://localhost:8080 
+
+#### Run locally + UI ####
+
+To execute the UI in its own server, follow the instructions of the
+previous section and execute the following command in the store-ui
+folder
+
+```bash
+npm start
+```
+
+The UI is configured to proxy API calls to http://localhost:8080/, so
+it's important to have the backend up and running
+
+The UI is accessible in http://localhost:3000
 
 ### Sample Data ###
+
+Some sample data to play with in the cloud deployed app:
 
 * The first admin user is generated when building the DB schema. 
 
@@ -107,7 +156,6 @@ I'd like to do some enhancements to the online store, for instance:
 * Improve the DTOs code, encapsulating fields.
 * Improve the DAOs with custom queries, that way I don't have to null
   the IDs of all the objects.
-* Deploy the site to GCP.
 * Allow users to modify their own data.
 * Add stock information:
     * Hide items out of stock.

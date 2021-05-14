@@ -1,6 +1,7 @@
 package net.ideaslibres.rhdstore.configuration;
 
 import net.ideaslibres.rhdstore.model.repository.UsersRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -89,12 +90,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public CorsFilter corsFilter() {
+    public CorsFilter corsFilter(
+            @Value ("${net.ideaslibres.rhd.cors.allowedOrigin:*}") String allowedOrigin
+    ) {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("*");
+        config.addAllowedOrigin(allowedOrigin);
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);
