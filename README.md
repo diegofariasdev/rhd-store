@@ -86,7 +86,7 @@ anyway I'd prefer to store it in an httpOnly cookie.
 
 #### Cloud ####
 
-The store is deployed to GCP: https://rhd-store.uc.r.appspot.com/#/
+Not deployed currently
 
 #### Run locally ####
 

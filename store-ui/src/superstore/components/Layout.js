@@ -32,7 +32,7 @@ function Layout (props) {
                     pad="medium"
                     justify='between'
                 >
-                    <Text>RHD Application Test by Diego Farías</Text>
+                    <Text>Application Test by Diego Farías</Text>
                 </Box>
             </Box>
         </Grommet>
